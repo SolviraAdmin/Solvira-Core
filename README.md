@@ -42,7 +42,7 @@ To prevent malicious fee changes, SOLVIRA enforces a **mathematical ratchet**:
 
 - Fees (burn + treasury fee) **cannot increase by more than 0.50% (50 BPS)** in a single update
 - Maximum total fee is **5%**
-- Protects against “honeypot” style tax spikes
+- Protects against "honeypot" style tax spikes
 
 ### 3. ⚡ Modern Standards (ERC20Permit – EIP-2612)
 
@@ -74,7 +74,7 @@ All PoTT fees use **Basis Points (BPS)**:
 On deployment, the contract mints the full supply and automatically allocates it to 8 ecosystem wallets:
 
 | Allocation Wallet      | Percentage | Amount (SLV) |
-|------------------------|-----------:|-------------:|
+|------------------------|------------|--------------|
 | Community              | 28.00%     | 94,080,000   |
 | Founder Vesting        | 15.02%     | 50,467,200   |
 | Liquidity              | 15.00%     | 50,400,000   |
@@ -149,6 +149,7 @@ function payForGoods(uint256 amount, address merchant)
 
     emit PoTTPayment(msg.sender, merchant, amount, toBurn, toFees, block.timestamp);
 }
+```
 
 ---
 
@@ -158,87 +159,102 @@ function payForGoods(uint256 amount, address merchant)
 |----------|-------|
 | Network | Sepolia Testnet |
 | Contract Address | `0x7A9Ef08ac4c851D02249Ef7c159A646C22a28388` |
-| Explorer | https://sepolia.etherscan.io/address/0x7A9Ef08ac4c851D02249Ef7c159A646C22a28388#code |
+| Explorer | [View on Etherscan](https://sepolia.etherscan.io/address/0x7A9Ef08ac4c851D02249Ef7c159A646C22a28388#code) |
 | Compiler | Solidity 0.8.26 (0 warnings) |
-| Verification | Etherscan Verified |
+| Verification | Etherscan Verified ✅ |
 
 ---
 
----
 ## 🧪 Developer Guide
 
 ### 📦 Prerequisites
+
 - Node.js & npm
 - Hardhat
 
----
-
 ### ⚙️ Installation
 
+```bash
 npm install
-
----
+```
 
 ### 🛠 Compile
 
+```bash
 npx hardhat compile
-
----
+```
 
 ### 🧪 Run Tests
 
+```bash
 npx hardhat test
+```
 
----
+### 🚀 Deploy to Sepolia
+
+```bash
+npx hardhat run scripts/deploy.js --network sepolia
+```
 
 ### 🔍 Verify on Etherscan
 
+```bash
 npx hardhat verify --network sepolia 0x7A9Ef08ac4c851D02249Ef7c159A646C22a28388
+```
 
 Replace the address if deploying a new version.
+
 ---
 
-🧾 Audit & Security
+## 🧾 Audit & Security
 
-Metric | Status
---- | ---
-Internal Audit Score | ⭐ 9.0 / 10
-Critical / High Issues | 🚫 None Found
-Compiler Warnings | 0 (Solidity 0.8.26)
-Governance | Gnosis Safe Multi-Sig
-Reentrancy | Protected (`nonReentrant`)
+| Metric | Status |
+|--------|--------|
+| Internal Audit Score | ⭐ 9.0 / 10 |
+| Critical / High Issues | 🚫 None Found |
+| Compiler Warnings | 0 (Solidity 0.8.26) |
+| Governance | Gnosis Safe Multi-Sig |
+| Reentrancy | Protected (`nonReentrant`) |
 
-⚠️ A professional third-party audit (OpenZeppelin / Trail of Bits / Certora) is strongly recommended before mainnet deployment.
+⚠️ A professional third-party audit (OpenZeppelin / Trail of Bits / Certora) is **strongly recommended** before mainnet deployment.
 
-📩 For security disclosures or inquiries: 
+📩 **For security disclosures or inquiries:**  
 security@solvira.io
 
-⸻
+---
 
-🗺️ Roadmap (Strategic Vision)
+## 🗺️ Roadmap (Strategic Vision)
 
-Phase | Timeline | Objective
---- | --- | ---
-Phase 1 | Q4 2025 | Contract, internal audit, brand identity
-Phase 2 | H1 2026 | Mainnet launch, Uniswap listing, first PoTT live with a physical partner
-Phase 3 | H2 2026 | Merchant app, ecosystem expansion, silver partner network
-Phase 4 | 2027+ | Tier-1 CEX listings, international rollout, Digital Silver standard
+| Phase | Timeline | Objective |
+|-------|----------|-----------|
+| Phase 1 | Q4 2025 | Contract, internal audit, brand identity |
+| Phase 2 | H1 2026 | Mainnet launch, Uniswap listing, first PoTT live with a physical partner |
+| Phase 3 | H2 2026 | Merchant app, ecosystem expansion, silver partner network |
+| Phase 4 | 2027+ | Tier-1 CEX listings, international rollout, Digital Silver standard |
 
-⸻
+---
 
-🤝 Contributors & Partners
+## 🤝 Contributors & Partners
 
-We welcome: 
-• Solidity & full-stack Web3 developers 
-• Cybersecurity / smart-contract researchers 
-• Precious-metal dealers & retail partners 
-• Early supporters / angel investors 
+We welcome:
 
-📬 Contact 
-• Investors: invest@solvira.io 
-• Security: security@solvira.io 
-• Twitter/X: @SolviraOfficial 
+- Solidity & full-stack Web3 developers
+- Cybersecurity / smart-contract researchers
+- Precious-metal dealers & retail partners
+- Early supporters / angel investors
 
-⸻
+### 📬 Contact
+
+- **Investors:** invest@solvira.io
+- **Security:** security@solvira.io
+- **Twitter/X:** [@SolviraOfficial](https://twitter.com/SolviraOfficial)
+
+---
+
+## 📄 License
+
+MIT License
+
+---
 
 © 2025 SOLVIRA Project – All rights reserved.
