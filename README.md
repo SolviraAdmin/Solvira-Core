@@ -164,41 +164,39 @@ function payForGoods(uint256 amount, address merchant)
 
 ---
 
+---
 ## 🧪 Developer Guide
 
 ### 📦 Prerequisites
-- Node.js & npm 
+- Node.js & npm
 - Hardhat
 
 ---
 
 ### ⚙️ Installation
 
-```bash
 npm install
-``` 
 
-``` 🛠 Compile
+---
+
+### 🛠 Compile
 
 npx hardhat compile
 
-⸻
+---
 
-🧪 Run Tests
+### 🧪 Run Tests
 
 npx hardhat test
 
-⸻
+---
 
-🔍 Verify on Etherscan
+### 🔍 Verify on Etherscan
 
 npx hardhat verify --network sepolia 0x7A9Ef08ac4c851D02249Ef7c159A646C22a28388
 
-```
-
 Replace the address if deploying a new version.
-
-⸻
+---
 
 🧾 Audit & Security
 
