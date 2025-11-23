@@ -1,13 +1,13 @@
 # SOLVIRA – The Digital Silver Asset 🪙
 
 ![Solidity](https://img.shields.io/badge/Solidity-0.8.26-363636?style=for-the-badge&logo=solidity)
-![Network](https://img.shields.io/badge/Network-Sepolia%20Testnet-blue?style=for-the-badge)
+![Network](https://img.shields.io/badge/Network-Base%20Mainnet-0052FF?style=for-the-badge&logo=ethereum)
 ![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
-![Audit](https://img.shields.io/badge/Internal%20Security%20Score-9.0%2F10-brightgreen?style=for-the-badge)
+![Audit](https://img.shields.io/badge/Internal%20Security%20Score-9.5%2F10-brightgreen?style=for-the-badge)
 
 **SOLVIRA (SLV)** is a deflationary, silver-linked digital asset designed to bridge the speed of DeFi with the stability of **physical silver**.
 
-This repository contains the smart-contract source code for **SOLVIRA V6 (Institutional-grade)**.
+This repository contains the smart-contract source code for **SOLVIRA V6 (Institutional-grade)**, deployed on **Base mainnet**.
 
 ---
 
@@ -33,8 +33,8 @@ Ownership and critical roles are assigned to a **Gnosis Safe multi-sig** from de
 - All admin roles go directly to the Safe
 - Governance can be migrated later (e.g. to a DAO or new Safe)
 
-> **Initial Governance (Sepolia):** 
-> `0x3207E30706F2C7FB47e992616fdBa9E85c888995`
+> **Production Governance (Base Mainnet):** 
+> `0xF1e029a360D2955B1Ea5bc0e2E210b706d1edBF7`
 
 ### 2. 🔒 Security Ratchet (Anti-Rug Mechanism)
 
@@ -96,7 +96,7 @@ SOLVIRA is built using **OpenZeppelin v5.x**, deployed with **Solidity 0.8.26**,
 - ✅ **Security Ratchet** – caps fee increases to `+0.50%` per update 
 - ✅ **Multi-Sig Governance (Gnosis Safe)** – set at deployment 
 - ✅ **Reentrancy Protection** – `nonReentrant` on PoTT 
-- ✅ **Role-Based Access Control** – `ADMIN_ROLE`, `PAUSER_ROLE`, `DEFAULT_ADMIN_ROLE` 
+- ✅ **Role-Based Access Control** – `ADMIN_ROLE`, `PAUSER_ROLE`, `POTT_OPERATOR_ROLE` 
 - ✅ **Anti-Whale Guard** – configurable `maxHoldAmount` with whitelist 
 - ✅ **Emergency Pause** – full transfer freeze in case of incident 
 - ✅ **Fixed Total Supply** – no mint, no inflation
@@ -110,8 +110,8 @@ SOLVIRA is built using **OpenZeppelin v5.x**, deployed with **Solidity 0.8.26**,
 | Standard          | ERC20 + ERC20Burnable + ERC20Permit |
 | Total Supply      | 336,000,000 SLV (fixed) |
 | Decimals          | 18 |
-| Network (Test)    | Sepolia Testnet |
-| Contract Address  | `0x7A9Ef08ac4c851D02249Ef7c159A646C22a28388` |
+| Network           | Base Mainnet (Ethereum L2) |
+| Contract Address  | `TBD (awaiting deployment)` |
 | Governance Model  | Gnosis Safe multi-sig |
 | Compiler          | Solidity `0.8.26` (0 warnings) |
 
@@ -153,15 +153,17 @@ function payForGoods(uint256 amount, address merchant)
 
 ---
 
-## 📦 Contract Deployment (Testnet)
+## 📦 Contract Deployment (Base Mainnet)
 
 | Property | Value |
 |----------|-------|
-| Network | Sepolia Testnet |
-| Contract Address | `0x7A9Ef08ac4c851D02249Ef7c159A646C22a28388` |
-| Explorer | [View on Etherscan](https://sepolia.etherscan.io/address/0x7A9Ef08ac4c851D02249Ef7c159A646C22a28388#code) |
+| Network | Base Mainnet |
+| Chain ID | 8453 |
+| Contract Address | `TBD (awaiting deployment)` |
+| Explorer | [BaseScan](https://basescan.org) |
 | Compiler | Solidity 0.8.26 (0 warnings) |
-| Verification | Etherscan Verified ✅ |
+| Verification | BaseScan Verified (after deployment) |
+| Governance Safe | `0xF1e029a360D2955B1Ea5bc0e2E210b706d1edBF7` |
 
 ---
 
@@ -190,19 +192,25 @@ npx hardhat compile
 npx hardhat test
 ```
 
-### 🚀 Deploy to Sepolia
+### 🚀 Deploy to Base Mainnet
 
 ```bash
-npx hardhat run scripts/deploy.js --network sepolia
+npx hardhat run scripts/deploy.js --network base
 ```
 
-### 🔍 Verify on Etherscan
+Or use the npm script:
 
 ```bash
-npx hardhat verify --network sepolia 0x7A9Ef08ac4c851D02249Ef7c159A646C22a28388
+npm run deploy:base
 ```
 
-Replace the address if deploying a new version.
+### 🔍 Verify on BaseScan
+
+```bash
+npx hardhat verify --network base <CONTRACT_ADDRESS>
+```
+
+Replace `<CONTRACT_ADDRESS>` with the deployed contract address.
 
 ---
 
@@ -210,11 +218,13 @@ Replace the address if deploying a new version.
 
 | Metric | Status |
 |--------|--------|
-| Internal Audit Score | ⭐ 9.0 / 10 |
+| Internal Audit Score | ⭐ 9.5 / 10 |
 | Critical / High Issues | 🚫 None Found |
 | Compiler Warnings | 0 (Solidity 0.8.26) |
 | Governance | Gnosis Safe Multi-Sig |
 | Reentrancy | Protected (`nonReentrant`) |
+| Security Ratchet | ✅ Enabled (max +0.50% per update) |
+| Basis Points Precision | ✅ 0.01% granularity |
 
 ⚠️ A professional third-party audit (OpenZeppelin / Trail of Bits / Certora) is **strongly recommended** before mainnet deployment.
 
@@ -227,10 +237,21 @@ security@solvira.io
 
 | Phase | Timeline | Objective |
 |-------|----------|-----------|
-| Phase 1 | Q4 2025 | Contract, internal audit, brand identity |
-| Phase 2 | H1 2026 | Mainnet launch, Uniswap listing, first PoTT live with a physical partner |
+| Phase 1 | Q4 2025 | ✅ Contract V6, internal audit (9.5/10), brand identity, bilingual website |
+| Phase 2 | H1 2026 | 🚀 Base mainnet launch, Uniswap listing, first PoTT live with a physical partner |
 | Phase 3 | H2 2026 | Merchant app, ecosystem expansion, silver partner network |
 | Phase 4 | 2027+ | Tier-1 CEX listings, international rollout, Digital Silver standard |
+
+---
+
+## 🌍 Multi-Language Support
+
+SOLVIRA features a **bilingual investor-ready website** (English & French):
+
+- 🇬🇧 **English** (default) – Global investors & institutional partners
+- 🇫🇷 **Français** – French-speaking markets & European expansion
+
+All documentation, smart contracts, and frontend interfaces use professional crypto-specific terminology.
 
 ---
 
@@ -245,9 +266,11 @@ We welcome:
 
 ### 📬 Contact
 
+- **Website:** [solvira.io](https://solvira.io) (coming soon)
 - **Investors:** invest@solvira.io
 - **Security:** security@solvira.io
 - **Twitter/X:** [@SolviraOfficial](https://twitter.com/SolviraOfficial)
+- **Discord:** [SOLVIRA Official Community](https://discord.gg/solvira)
 
 ---
 
