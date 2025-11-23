@@ -1,4 +1,4 @@
-# SOLVIRA – The Digital Silver Standard 🪙
+# SOLVIRA – Crypto-to-Merchant Payment Protocol 🪙
 
 ![Solidity](https://img.shields.io/badge/Solidity-0.8.26-363636?style=for-the-badge&logo=solidity)
 ![Network](https://img.shields.io/badge/Network-Base%20Mainnet-0052FF?style=for-the-badge&logo=ethereum)
@@ -6,7 +6,7 @@
 ![SOLVIRA Audit](https://img.shields.io/badge/SOLVIRA%20V6%20Audit-9.0%2F10-success?style=for-the-badge)
 ![Vesting Audit](https://img.shields.io/badge/Vesting%20Audit-9.5%2F10-brightgreen?style=for-the-badge)
 
-**SOLVIRA (SLV)** is a deflationary utility payment token designed for the acquisition of physical silver through a secure RWA (Real-World Asset) payment protocol.
+**SOLVIRA (SLV)** is a deflationary utility payment token serving as a specialized payment layer for precious metal dealers. **No reserve, no backing, no convertibility — only payment utility** enabling on-chain → off-chain tangible purchases through a secure Off-chain merchant settlement middleware for precious metals.
 
 This repository contains the production-ready smart contracts for **SOLVIRA V6** and **SolviraVesting**, both deployed on **Base mainnet** (Ethereum L2).
 
@@ -15,6 +15,7 @@ This repository contains the production-ready smart contracts for **SOLVIRA V6**
 ## 📑 Table of Contents
 
 - [Vision](#-vision)
+- [Legal Disclaimer](#-legal-disclaimer)
 - [Architecture Overview](#-architecture-overview)
 - [Institutional Security](#️-institutional-security-architecture)
 - [Tokenomics](#-tokenomics)
@@ -31,11 +32,28 @@ This repository contains the production-ready smart contracts for **SOLVIRA V6**
 
 ## 🌐 Vision
 
-SOLVIRA aims to become a **Digital Silver Standard**:
+SOLVIRA is a **crypto-to-merchant payment protocol** specialized for precious metal dealers:
 
+- **Payment utility token** (not backed, not convertible, no reserve)
 - Rare & **deflationary** (fixed supply + burn on PoTT)
 - **Transactional** and DeFi-compatible (ERC20 + ERC20Permit)
-- **Facilitates physical silver acquisition** through the PoTT mechanism and merchant partnerships
+- **Enables on-chain → off-chain purchases** through Comptoir partner network
+- **Off-chain merchant settlement middleware for precious metals** connecting crypto holders to tangible goods merchants
+
+---
+
+## ⚖️ Legal Disclaimer
+
+**IMPORTANT LEGAL NOTICE:**
+
+- ✅ **SOLVIRA is a utility token** for payment processing only
+- ❌ **NO backing**: SLV is not backed by silver, gold, or any physical asset
+- ❌ **NO reserve**: There is no reserve pool of precious metals
+- ❌ **NO convertibility**: SLV cannot be redeemed or exchanged for physical silver
+- ❌ **NO ownership rights**: Holding SLV does not grant ownership of any tangible assets
+- ✅ **Payment middleware only**: SLV facilitates crypto-to-merchant payments for tangible purchases
+
+**SLV tokens provide payment utility ONLY. They represent no claim on physical assets.**
 
 ---
 
