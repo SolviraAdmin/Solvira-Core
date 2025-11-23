@@ -1,4 +1,4 @@
-# SOLVIRA – The Digital Silver Asset 🪙
+# SOLVIRA – The Digital Silver Standard 🪙
 
 ![Solidity](https://img.shields.io/badge/Solidity-0.8.26-363636?style=for-the-badge&logo=solidity)
 ![Network](https://img.shields.io/badge/Network-Base%20Mainnet-0052FF?style=for-the-badge&logo=ethereum)
@@ -6,7 +6,7 @@
 ![SOLVIRA Audit](https://img.shields.io/badge/SOLVIRA%20V6%20Audit-9.0%2F10-success?style=for-the-badge)
 ![Vesting Audit](https://img.shields.io/badge/Vesting%20Audit-9.5%2F10-brightgreen?style=for-the-badge)
 
-**SOLVIRA (SLV)** is a deflationary, silver-linked digital asset designed to bridge the speed of DeFi with the stability of **physical silver**.
+**SOLVIRA (SLV)** is a deflationary utility payment token designed for the acquisition of physical silver through a secure RWA (Real-World Asset) payment protocol.
 
 This repository contains the production-ready smart contracts for **SOLVIRA V6** and **SolviraVesting**, both deployed on **Base mainnet** (Ethereum L2).
 
@@ -31,11 +31,11 @@ This repository contains the production-ready smart contracts for **SOLVIRA V6**
 
 ## 🌐 Vision
 
-SOLVIRA aims to become a **Digital Silver Asset**:
+SOLVIRA aims to become a **Digital Silver Standard**:
 
 - Rare & **deflationary** (fixed supply + burn on PoTT)
 - **Transactional** and DeFi-compatible (ERC20 + ERC20Permit)
-- **Intrinsically linked** to physical silver through the PoTT mechanism and merchant partnerships
+- **Facilitates physical silver acquisition** through the PoTT mechanism and merchant partnerships
 
 ---
 
@@ -77,19 +77,42 @@ SOLVIRA consists of **two production-grade smart contracts**:
 
 SOLVIRA is built with a **security-first** approach, going beyond a standard ERC20.
 
-### 1. 🏛️ Governance (Multi-Sig Safe)
+### 1. ⏱️ TimelockController (48-Hour Governance Delay)
 
-Ownership and critical roles are assigned to a **Gnosis Safe multi-sig** from deployment:
+All critical admin operations pass through a **TimelockController** with a 48-hour delay:
 
-- Deployer (EOA) has **no admin rights**
-- All admin roles go directly to the Safe
-- Governance can be migrated later (e.g. to a DAO or new Safe)
-- **Zero centralization** at launch
+```
+Gnosis Safe (Multi-sig)
+    ↓ (proposes)
+TimelockController (48h delay)
+    ↓ (executes)
+SOLVIRA Token
+```
 
-> **Production Governance (Base Mainnet):**  
+**Security Benefits:**
+- **48-hour notice period** for all parameter changes (rates, whitelist, pause, etc.)
+- **Community can react** before malicious operations execute
+- **Gnosis Safe proposes** operations via multi-sig consensus
+- **Anyone can execute** after the 48h delay (full transparency)
+- **Safe can cancel** pending operations if issues detected
+
+> **Timelock Contract (Base Mainnet):**  
+> `Deployed via scripts/deployTimelock.js`
+>
+> **Gnosis Safe (Base Mainnet):**  
 > `0xF1e029a360D2955B1Ea5bc0e2E210b706d1edBF7`
 
-### 2. 🔒 Security Ratchet (Anti-Rug Mechanism)
+### 2. 🏛️ Governance (Multi-Sig Safe)
+
+Ownership and critical roles flow through the **Timelock**, controlled by a **Gnosis Safe multi-sig**:
+
+- Deployer (EOA) has **no admin rights**
+- All admin roles granted to the **TimelockController**
+- Gnosis Safe controls the Timelock as **PROPOSER** and **CANCELLER**
+- Governance can be migrated later (e.g. to a DAO or new Safe)
+- **Zero centralization** + **48h transparency** at launch
+
+### 3. 🔒 Security Ratchet (Anti-Rug Mechanism)
 
 To prevent malicious fee changes, SOLVIRA enforces a **mathematical ratchet**:
 
@@ -97,8 +120,9 @@ To prevent malicious fee changes, SOLVIRA enforces a **mathematical ratchet**:
 - Maximum total fee is **5%**
 - Protects against "honeypot" style tax spikes
 - **Impossible to rug pull** via sudden fee increases
+- Changes require **48h notice** via Timelock
 
-### 3. ⚡ Modern Standards (ERC20Permit – EIP-2612)
+### 4. ⚡ Modern Standards (ERC20Permit – EIP-2612)
 
 SOLVIRA implements **ERC20Permit**, enabling:
 
@@ -128,12 +152,13 @@ All PoTT fees use **Basis Points (BPS)**:
 
 ### Initial Distribution Architecture
 
-SOLVIRA uses a **simplified 2-argument constructor** for secure deployment:
+SOLVIRA uses a **simplified 3-argument constructor** for secure timelock-integrated deployment:
 
 ```solidity
 constructor(
-    address liquidityWallet,      // 15% → Liquidity pool
-    address vestingContractAddress // 23% → Vesting contract
+    address liquidityWallet,       // 15% → Liquidity pool
+    address vestingContractAddress, // 23% → Vesting contract
+    address timelockAddress        // TimelockController (48h delay)
 )
 ```
 
@@ -147,9 +172,10 @@ constructor(
 | **TOTAL** | **100%** | **336,000,000** | ✅ Fully allocated at deployment |
 
 **Security Benefits:**
-- ✅ **Fewer constructor arguments** (2 instead of 8) → Less deployment risk
+- ✅ **Fewer constructor arguments** (3 instead of 8) → Less deployment risk
 - ✅ **All operational funds** routed to Gnosis Safe → Multi-sig control
 - ✅ **Single vesting contract** → Simplified governance
+- ✅ **48-hour timelock** → All admin changes visible before execution
 - ✅ **Zero individual wallets exposed** → Reduced attack surface
 
 ---
@@ -329,10 +355,11 @@ function payForGoods(uint256 amount, address merchant)
 
 | Contract | Address | Verification |
 |----------|---------|--------------|
-| **SOLVIRA.sol** | `TBD (awaiting deployment)` | BaseScan Verified (after deployment) |
 | **SolviraVesting.sol** | `TBD (awaiting deployment)` | BaseScan Verified (after deployment) |
+| **SolviraTimelock.sol** | `TBD (awaiting deployment)` | BaseScan Verified (after deployment) |
+| **SOLVIRA.sol** | `TBD (awaiting deployment)` | BaseScan Verified (after deployment) |
 
-### Deployment Workflow
+### Deployment Workflow (3-Phase Process)
 
 **Critical: Deploy in this exact order:**
 
@@ -340,25 +367,34 @@ function payForGoods(uint256 amount, address merchant)
    ```bash
    npx hardhat run scripts/deployVesting.js --network base
    ```
+   Update `.env` with `VESTING_CONTRACT_ADDRESS`
 
-2. **Deploy SOLVIRA.sol** with vesting address
+2. **Deploy SolviraTimelock.sol** (48h delay governance)
+   ```bash
+   npx hardhat run scripts/deployTimelock.js --network base
+   ```
+   Update `.env` with `TIMELOCK_ADDRESS`
+
+3. **Deploy SOLVIRA.sol** with vesting + timelock addresses
    ```bash
    npx hardhat run scripts/deploy.js --network base
    ```
 
-3. **Configure vesting allocations**
+4. **Configure vesting allocations**
    - Set founder principal (50,467,200 SLV)
    - Set founder ops (9,979,200 SLV)
    - Call `finalizeAllocations()` to lock
 
-4. **Add investors** to vesting contract
+5. **Add investors** to vesting contract
    ```bash
    npx hardhat run scripts/addInvestors.js --network base
    ```
 
-5. **Verify contracts** on BaseScan
+6. **Verify contracts** on BaseScan
    ```bash
-   npx hardhat verify --network base <CONTRACT_ADDRESS>
+   npx hardhat verify --network base <VESTING_ADDRESS>
+   npx hardhat verify --network base <TIMELOCK_ADDRESS>
+   npx hardhat verify --network base <SOLVIRA_ADDRESS> "<LIQUIDITY>" "<VESTING>" "<TIMELOCK>"
    ```
 
 See [`DEPLOYMENT_GUIDE_BASE.md`](./DEPLOYMENT_GUIDE_BASE.md) for complete step-by-step instructions.
@@ -480,15 +516,19 @@ cp .env.example .env
 # - PRIVATE_KEY (deployer wallet)
 # - BASESCAN_API_KEY (for verification)
 # - LIQUIDITY_WALLET (15% allocation)
-# - GNOSIS_SAFE (62.01% allocation)
 ```
 
-**Step 2: Deploy contracts**
+**Step 2: Deploy contracts (3-phase process)**
 ```bash
-# Deploy vesting contract first
+# Phase 1: Deploy vesting contract first
 npx hardhat run scripts/deployVesting.js --network base
+# → Update .env with VESTING_CONTRACT_ADDRESS
 
-# Deploy main token (requires vesting address)
+# Phase 2: Deploy timelock controller (48h delay)
+npx hardhat run scripts/deployTimelock.js --network base
+# → Update .env with TIMELOCK_ADDRESS
+
+# Phase 3: Deploy main token (requires vesting + timelock addresses)
 npx hardhat run scripts/deploy.js --network base
 ```
 
@@ -499,8 +539,10 @@ npm run deploy:base
 
 **Step 3: Verify on BaseScan**
 ```bash
-npx hardhat verify --network base <SOLVIRA_ADDRESS> <LIQUIDITY_WALLET> <VESTING_ADDRESS>
-npx hardhat verify --network base <VESTING_ADDRESS> <SOLVIRA_ADDRESS>
+# Verify all three contracts
+npx hardhat verify --network base <VESTING_ADDRESS>
+npx hardhat verify --network base <TIMELOCK_ADDRESS>
+npx hardhat verify --network base <SOLVIRA_ADDRESS> "<LIQUIDITY_WALLET>" "<VESTING_ADDRESS>" "<TIMELOCK_ADDRESS>"
 ```
 
 ### 📚 Documentation
