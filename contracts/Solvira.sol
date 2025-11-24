@@ -18,19 +18,15 @@ contract SolviraToken is ERC20, ERC20Burnable, ERC20Permit, AccessControl, Pausa
 
     // --- GOVERNANCE & SECURITY ---
     // Official Gnosis Safe Multi-sig Address (Base Mainnet)
+    // This Safe receives all operational funds (Treasury, Community, Marketing, Dev)
     address public constant INITIAL_SAFE = 0xF1e029a360D2955B1Ea5bc0e2E210b706d1edBF7;
 
     address public governance;
+    address public timelock; // TimelockController (48h delay for all admin operations)
 
-    // --- WALLET ADDRESSES (8) ---
-    address public treasuryWallet;     
-    address public communityWallet;     
-    address public founderVestingWallet;
-    address public liquidityWallet;     
-    address public marketingWallet;     
-    address public devWallet;           
-    address public investorWallet;     
-    address public founderPersonalWallet;
+    // --- WALLET ADDRESSES (2 only) ---
+    address public liquidityWallet;
+    address public vestingContractAddress;
 
     // --- CONFIGURATION ---
     uint16 public burnRateBPS = 100; // 100 Basis Points = 1.00%
@@ -42,6 +38,7 @@ contract SolviraToken is ERC20, ERC20Burnable, ERC20Permit, AccessControl, Pausa
     bool public antiWhaleActive = true;
     uint256 public constant MAX_SUPPLY = 336_000_000 * 10**18;
     uint256 public maxHoldAmount;
+    uint256 public maxTxAmount;
 
     mapping(address => bool) public isWhitelisted;
 
@@ -49,87 +46,89 @@ contract SolviraToken is ERC20, ERC20Burnable, ERC20Permit, AccessControl, Pausa
     event PoTTPayment(address indexed buyer, address indexed merchant, uint256 amount, uint256 burned, uint256 fees, uint256 timestamp);
     event RatesUpdated(uint16 oldBurnBPS, uint16 newBurnBPS, uint16 oldFeeBPS, uint16 newFeeBPS);
     event GovernanceChanged(address indexed oldGov, address indexed newGov);
+    event TimelockConfigured(address indexed timelockAddress);
     event MaxHoldUpdated(uint256 newMaxHold);
+    event MaxTxUpdated(uint256 newMaxTx);
     event AntiWhaleToggled(bool isActive);
     event WhitelistUpdated(address indexed account, bool status);
 
     constructor(
-        address _treasury,
-        address _community,
-        address _founderVesting,
-        address _liquidity,
-        address _marketing,
-        address _dev,
-        address _investor,
-        address _founderPersonal
+        address _liquidityWallet,
+        address _vestingContractAddress,
+        address _timelockAddress
     )
     ERC20("SOLVIRA", "SLV")
     ERC20Permit("SOLVIRA")
     {
         // 1. SAFETY CHECKS
-        require(_treasury != address(0), "Treasury Zero");
-        require(_community != address(0), "Community Zero");
-        require(_founderVesting != address(0), "Vesting Zero");
-        require(_liquidity != address(0), "Liquidity Zero");
-        require(_marketing != address(0), "Marketing Zero");
-        require(_dev != address(0), "Dev Zero");
-        require(_investor != address(0), "Investor Zero");
-        require(_founderPersonal != address(0), "Founder Zero");
+        require(_liquidityWallet != address(0), "Liquidity Zero");
+        require(_vestingContractAddress != address(0), "Vesting Zero");
+        require(_timelockAddress != address(0), "Timelock Zero");
 
-        treasuryWallet = _treasury;
-        communityWallet = _community;
-        founderVestingWallet = _founderVesting;
-        liquidityWallet = _liquidity;
-        marketingWallet = _marketing;
-        devWallet = _dev;
-        investorWallet = _investor;
-        founderPersonalWallet = _founderPersonal;
+        liquidityWallet = _liquidityWallet;
+        vestingContractAddress = _vestingContractAddress;
+        timelock = _timelockAddress;
 
-        // 2. GOVERNANCE SETUP
+        // 2. GOVERNANCE SETUP (Timelock Architecture)
+        // The Gnosis Safe remains the governance address for reference/tracking
         governance = INITIAL_SAFE;
 
-        // Grant roles to Governance (Safe)
-        _grantRole(DEFAULT_ADMIN_ROLE, governance);
-        _grantRole(ADMIN_ROLE, governance);
-        _grantRole(PAUSER_ROLE, governance);
+        // ALL SENSITIVE ROLES GO TO TIMELOCK (48h delay)
+        // This ensures all critical operations have a 48-hour notice period
+        _grantRole(DEFAULT_ADMIN_ROLE, timelock);  // Admin of admins (role management)
+        _grantRole(ADMIN_ROLE, timelock);          // Parameter changes (setRates, whitelist, etc.)
+        _grantRole(PAUSER_ROLE, timelock);         // Emergency pause (with 48h delay)
+        
+        // Note: The Gnosis Safe controls the Timelock as PROPOSER
+        // Safe → proposes → Timelock (48h) → executes → SOLVIRA
 
-        // Whitelisting
-        isWhitelisted[governance] = true;
-        isWhitelisted[address(this)] = true;
-        isWhitelisted[treasuryWallet] = true;
-        isWhitelisted[communityWallet] = true;
-        isWhitelisted[founderVestingWallet] = true;
-        isWhitelisted[liquidityWallet] = true;
-        isWhitelisted[marketingWallet] = true;
-        isWhitelisted[devWallet] = true;
-        isWhitelisted[investorWallet] = true;
-        isWhitelisted[founderPersonalWallet] = true;
+        emit TimelockConfigured(timelock);
 
-        // Anti-Whale Setup
+        // Whitelisting (simplified - only essential addresses)
+        isWhitelisted[governance] = true;              // Safe multi-sig
+        isWhitelisted[timelock] = true;                // Timelock controller
+        isWhitelisted[address(this)] = true;           // Token contract
+        isWhitelisted[liquidityWallet] = true;         // Liquidity provider
+        isWhitelisted[vestingContractAddress] = true;  // Vesting contract
+
+        // Anti-Whale Setup (1% of total supply)
         maxHoldAmount = MAX_SUPPLY / 100;
+        
+        // Max Transaction Amount (0.2% of total supply for liquidity stabilization)
+        maxTxAmount = MAX_SUPPLY / 500;
 
-        // 3. DISTRIBUTION
-        uint256 communityShare = (MAX_SUPPLY * 2800) / 10000;       
-        uint256 liquidityShare = (MAX_SUPPLY * 1500) / 10000;       
-        uint256 founderVestingShare = (MAX_SUPPLY * 1502) / 10000;
-        uint256 treasuryShare = (MAX_SUPPLY * 1200) / 10000;       
-        uint256 marketingShare = (MAX_SUPPLY * 1200) / 10000;       
-        uint256 devShare = (MAX_SUPPLY * 1000) / 10000;             
-        uint256 investorShare = (MAX_SUPPLY * 500) / 10000;         
-        uint256 founderPersonalShare = (MAX_SUPPLY * 297) / 10000;
+        // 3. DISTRIBUTION BLOCK
+        // All percentages use basis points for precision (1 BP = 0.01%)
+        
+        // Operational wallets → INITIAL_SAFE (Gnosis Safe manages everything)
+        uint256 communityShare = (MAX_SUPPLY * 2800) / 10000;    // 28.00%
+        uint256 treasuryShare = (MAX_SUPPLY * 1200) / 10000;     // 12.00%
+        uint256 marketingShare = (MAX_SUPPLY * 1200) / 10000;    // 12.00%
+        uint256 devShare = (MAX_SUPPLY * 1000) / 10000;          // 10.00%
+        
+        // Liquidity wallet (external DEX/AMM)
+        uint256 liquidityShare = (MAX_SUPPLY * 1500) / 10000;    // 15.00%
+        
+        // Vesting allocations → Vesting Contract (manages all vesting logic)
+        uint256 founderVestingShare = (MAX_SUPPLY * 1502) / 10000;    // 15.02%
+        uint256 founderPersonalShare = (MAX_SUPPLY * 297) / 10000;    // 2.97%
+        uint256 investorShare = (MAX_SUPPLY * 500) / 10000;           // 5.00%
 
-        uint256 allocated = communityShare + liquidityShare + founderVestingShare + treasuryShare + marketingShare + devShare + investorShare + founderPersonalShare;
+        // Calculate total vesting
+        uint256 totalVestingShare = founderVestingShare + founderPersonalShare + investorShare;
+        
+        // Calculate Safe allocation (all operational funds)
+        uint256 safeShare = communityShare + treasuryShare + marketingShare + devShare;
+
+        // Calculate total allocated and add remainder to Safe
+        uint256 allocated = safeShare + liquidityShare + totalVestingShare;
         uint256 remainder = MAX_SUPPLY - allocated;
-        treasuryShare += remainder;
+        safeShare += remainder;
 
-        _mint(communityWallet, communityShare);
-        _mint(liquidityWallet, liquidityShare);
-        _mint(founderVestingWallet, founderVestingShare);
-        _mint(treasuryWallet, treasuryShare);
-        _mint(marketingWallet, marketingShare);
-        _mint(devWallet, devShare);
-        _mint(investorWallet, investorShare);
-        _mint(founderPersonalWallet, founderPersonalShare);
+        // MINT DISTRIBUTION
+        _mint(INITIAL_SAFE, safeShare);                    // 62.01% + remainder → Safe multi-sig
+        _mint(liquidityWallet, liquidityShare);            // 15.00% → Liquidity
+        _mint(vestingContractAddress, totalVestingShare);  // 23.00% → Vesting Contract
     }
 
     // ==========================================
@@ -143,10 +142,9 @@ contract SolviraToken is ERC20, ERC20Burnable, ERC20Permit, AccessControl, Pausa
         uint256 toFees = (amount * feeRateBPS) / 10000;
         uint256 toMerchant = amount - toBurn - toFees;
 
-        address _treasury = treasuryWallet;
-
+        // All PoTT fees go to the Governance Safe (treasury operations)
         _burn(msg.sender, toBurn);
-        _transfer(msg.sender, _treasury, toFees);
+        _transfer(msg.sender, INITIAL_SAFE, toFees);
         _transfer(msg.sender, merchant, toMerchant);
 
         emit PoTTPayment(msg.sender, merchant, amount, toBurn, toFees, block.timestamp);
@@ -198,6 +196,12 @@ contract SolviraToken is ERC20, ERC20Burnable, ERC20Permit, AccessControl, Pausa
         emit MaxHoldUpdated(_amount);
     }
 
+    function setMaxTxAmount(uint256 _amount) external onlyRole(ADMIN_ROLE) {
+        require(_amount >= MAX_SUPPLY / 1000, "MaxTx: too low (min 0.1%)");
+        maxTxAmount = _amount;
+        emit MaxTxUpdated(_amount);
+    }
+
     function setAntiWhaleActive(bool _active) external onlyRole(ADMIN_ROLE) {
         antiWhaleActive = _active;
         emit AntiWhaleToggled(_active);
@@ -208,6 +212,12 @@ contract SolviraToken is ERC20, ERC20Burnable, ERC20Permit, AccessControl, Pausa
 
     function _update(address from, address to, uint256 value) internal override(ERC20) whenNotPaused {
         if (from != address(0) && to != address(0) && antiWhaleActive) {
+            // Max Transaction Amount check (both sender and receiver must not be whitelisted)
+            if (!isWhitelisted[from] && !isWhitelisted[to]) {
+                require(value <= maxTxAmount, "Exceeds MaxTx");
+            }
+            
+            // Max Hold Amount check (only receiver)
             if (!isWhitelisted[to]) {
                 require(balanceOf(to) + value <= maxHoldAmount, "Anti-Whale: Limit exceeded");
             }
