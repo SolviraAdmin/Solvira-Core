@@ -78,4 +78,3 @@ contract SolviraTimelock is TimelockController {
         return hasRole(CANCELLER_ROLE, GNOSIS_SAFE);
     }
 }
-
