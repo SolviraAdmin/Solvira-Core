@@ -59,27 +59,29 @@ SOLVIRA is a **crypto-to-merchant payment protocol** specialized for precious me
 
 ## 🏗️ Architecture Overview
 
-SOLVIRA consists of **two production-grade smart contracts**:
+SOLVIRA consists of **three production-grade smart contracts** with dual-vesting architecture:
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                     SOLVIRA ECOSYSTEM                       │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│  ┌──────────────────┐              ┌───────────────────┐   │
-│  │   SOLVIRA.sol    │              │ SolviraVesting.sol│   │
-│  │   (ERC20 Token)  │──────mints───│  (Vesting Logic)  │   │
-│  │                  │  77,246,400  │                   │   │
-│  │  336M SLV Total  │     SLV      │  23% of Supply    │   │
-│  └──────────────────┘              └───────────────────┘   │
-│         │                                    │              │
-│         │                                    │              │
-│    Distribution:                       Distribution:        │
-│    • Gnosis Safe: 62.01%              • Founder: 15.02%    │
-│    • Liquidity: 15.00%                • FounderOps: 2.97%  │
-│    • Vesting: 23.00%                  • Investors: 5.00%   │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────┐
+│                         SOLVIRA ECOSYSTEM                               │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│  ┌──────────────────┐       ┌──────────────────┐  ┌─────────────────┐ │
+│  │   SOLVIRA.sol    │       │OperationalVesting│  │SolviraVesting.sol│ │
+│  │   (ERC20 Token)  │─mints─│      (50%)       │  │    (22.99%)     │ │
+│  │                  │       │   168M SLV       │  │   77.2M SLV     │ │
+│  │  336M SLV Total  │       └──────────────────┘  └─────────────────┘ │
+│  └──────────────────┘                                                  │
+│         │                                                               │
+│    Distribution:                                                        │
+│    • Safe (Liquid): 12.01%  (40.4M SLV)   Emergency funds only        │
+│    • Liquidity: 15.00%      (50.4M SLV)   DEX pools                   │
+│    • OpVesting: 50.00%      (168M SLV)    Community/Marketing/Dev     │
+│    • SolviraVesting: 22.99% (77.2M SLV)   Founder/Investor vesting    │
+│                                                                         │
+│  🔐 SECURITY: 87.99% Time-Locked (295.6M SLV)                          │
+│               12.01% Liquid in Multi-Sig Safe (40.4M SLV)              │
+└─────────────────────────────────────────────────────────────────────────┘
 ```
 
 ### Key Features
@@ -87,7 +89,8 @@ SOLVIRA consists of **two production-grade smart contracts**:
 | Contract | Purpose | Security Score |
 |----------|---------|----------------|
 | **SOLVIRA.sol** | Main ERC20 token with PoTT, anti-whale, governance | **9.0/10** ⭐ |
-| **SolviraVesting.sol** | Time-locked token distribution with cliff periods | **9.5/10** 🏆 |
+| **OperationalVesting.sol** | Operational treasury vesting (Community, Marketing, Dev) | **9.8/10** 🏆 |
+| **SolviraVesting.sol** | Founder & investor vesting with cliff periods | **9.5/10** ⭐ |
 
 ---
 
@@ -140,7 +143,46 @@ To prevent malicious fee changes, SOLVIRA enforces a **mathematical ratchet**:
 - **Impossible to rug pull** via sudden fee increases
 - Changes require **48h notice** via Timelock
 
-### 4. ⚡ Modern Standards (ERC20Permit – EIP-2612)
+### 4. 🐋 Anti-Whale Protection (Dual-Layer Security)
+
+SOLVIRA implements a **revolutionary dual-layer protection** to prevent market manipulation and ensure liquidity stability:
+
+#### Layer 1: Max Hold Amount (1% of supply)
+- **Purpose:** Prevents wallet concentration and whale accumulation
+- **Default:** `3,360,000 SLV` (1% of 336M total supply)
+- **Applies to:** Receiving wallets only (checked on transfer)
+- **Bypass:** Whitelisted system wallets (Safe, Timelock, Liquidity, Vesting)
+
+#### Layer 2: Max Transaction Amount (0.2% of supply) 🆕
+- **Purpose:** Stabilizes price relative to real liquidity (15% pool = 50.4M SLV)
+- **Default:** `672,000 SLV` (0.2% of 336M total supply)
+- **Represents:** 1.33% of available liquidity (optimal for price stability)
+  - **Calculation:** 672,000 SLV ÷ 50,400,000 SLV liquidity = 1.33%
+  - **Impact:** Single transaction can move at most 1.33% of pool depth
+- **Applies to:** Both sender AND receiver must be non-whitelisted
+- **Anti-Honeypot Protection:** 0.1% minimum floor enforced on-chain
+  - **Minimum:** `336,000 SLV` (336M × 0.1% = 336,000)
+  - **Function:** `setMaxTxAmount()` reverts if `_amount < 336,000 SLV`
+  - **Governance:** Changes require `ADMIN_ROLE` + 48h Timelock delay
+- **Admin Control:** `ADMIN_ROLE` can adjust via `setMaxTxAmount()` with 48h Timelock delay
+
+**Security Benefits:**
+- ✅ Prevents large dumps that could destabilize the market
+- ✅ Ensures smooth price discovery during initial trading phase
+- ✅ Protects against flash-loan style attacks
+- ✅ Cannot be weaponized (0.1% minimum enforced on-chain)
+- ✅ Whitelist bypass allows system operations (vesting claims, liquidity adds, etc.)
+
+**Comparison Table:**
+
+| Protection | Default Value | SLV Amount | % of Liquidity | Bypassed When |
+|------------|--------------|------------|----------------|---------------|
+| **maxHoldAmount** | 1.0% | 3,360,000 | 6.67% | Receiver is whitelisted |
+| **maxTxAmount** | 0.2% | 672,000 | 1.33% | Sender OR receiver is whitelisted |
+
+> 💡 **Design Rationale:** With 15% liquidity (50.4M SLV), a 0.2% transaction limit allows meaningful trades while preventing single transactions from moving >1.3% of the pool depth.
+
+### 5. ⚡ Modern Standards (ERC20Permit – EIP-2612)
 
 SOLVIRA implements **ERC20Permit**, enabling:
 
@@ -149,7 +191,7 @@ SOLVIRA implements **ERC20Permit**, enabling:
 - Compatibility with modern DeFi protocols (Uniswap v3, Aave v3, CowSwap, etc.)
 - **Meta-transaction ready**
 
-### 4. 🎯 Precision Accounting (Basis Points)
+### 6. 🎯 Precision Accounting (Basis Points)
 
 All PoTT fees use **Basis Points (BPS)**:
 
@@ -170,13 +212,15 @@ All PoTT fees use **Basis Points (BPS)**:
 
 ### Initial Distribution Architecture
 
-SOLVIRA uses a **simplified 3-argument constructor** for secure timelock-integrated deployment:
+SOLVIRA uses a **5-argument constructor** with dual-vesting architecture for maximum treasury security:
 
 ```solidity
 constructor(
-    address liquidityWallet,       // 15% → Liquidity pool
-    address vestingContractAddress, // 23% → Vesting contract
-    address timelockAddress        // TimelockController (48h delay)
+    address safeMultisigAddress,      // Gnosis Safe (multi-sig governance)
+    address timelockAddress,          // TimelockController (48h delay)
+    address liquidityWallet,          // 15% → Liquidity pool
+    address operationalVestingAddr,   // 50% → OperationalVesting contract
+    address solviraVestingAddress     // 22.99% → SolviraVesting contract
 )
 ```
 
@@ -184,23 +228,47 @@ constructor(
 
 | Recipient | Allocation | Amount (SLV) | Purpose |
 |-----------|------------|--------------|---------|
-| **Gnosis Safe** | 62.01% | 208,353,600 | Operational funds (Community 28% + Treasury 12.01% + Marketing 12% + Dev 10%) |
+| **Gnosis Safe (Liquid)** | 12.01% | 40,372,800 | Emergency operational funds only (multi-sig controlled) |
 | **Liquidity Wallet** | 15.00% | 50,400,000 | DEX liquidity (Uniswap, etc.) |
-| **Vesting Contract** | 23.00% | 77,246,400 | Time-locked founder & investor allocations |
+| **OperationalVesting** | 50.00% | 168,000,000 | Time-locked treasury (Community 28% + Marketing 12% + Dev 10%) |
+| **SolviraVesting** | 22.99% | 77,227,200 | Time-locked founder & investor allocations |
 | **TOTAL** | **100%** | **336,000,000** | ✅ Fully allocated at deployment |
 
 **Security Benefits:**
-- ✅ **Fewer constructor arguments** (3 instead of 8) → Less deployment risk
-- ✅ **All operational funds** routed to Gnosis Safe → Multi-sig control
-- ✅ **Single vesting contract** → Simplified governance
+- ✅ **87.99% time-locked** → Only 12.01% liquid in Safe (down from 62.01%)
+- ✅ **Dual-vesting architecture** → Operational + Founder/Investor vesting
+- ✅ **Drainage protection** → Treasury funds released on progressive schedules
 - ✅ **48-hour timelock** → All admin changes visible before execution
-- ✅ **Zero individual wallets exposed** → Reduced attack surface
+- ✅ **Multi-sig control** → Emergency funds require 2/3 signatures
+- ✅ **Zero individual wallets** → All allocations multi-sig or time-locked
 
 ---
 
-## 🔐 Vesting System
+## 🔐 Dual Vesting System
 
-The **SolviraVesting.sol** contract manages **77,246,400 SLV** (23% of total supply) across **three distinct vesting schedules**.
+SOLVIRA implements **two independent vesting contracts** for maximum security:
+
+### 1️⃣ OperationalVesting.sol
+
+Manages **168,000,000 SLV** (50% of total supply) for operational budgets with progressive unlock schedules:
+
+| Category | Allocation | Amount (SLV) | Cliff | Vesting Period | Total Duration |
+|----------|------------|--------------|-------|----------------|----------------|
+| **Community** | 28% | 94,080,000 | 3 months | 24 months linear | **27 months** |
+| **Marketing** | 12% | 40,320,000 | 1 month | 12 months linear | **13 months** |
+| **Development** | 10% | 33,600,000 | 1 month | 18 months linear | **19 months** |
+
+**Security Features:**
+- ✅ Single-use allocation setters (prevents inflation attacks)
+- ✅ Balance verification on initialization (requires exactly 168M SLV)
+- ✅ Triple-checked finalization (allocation + sum + balance verification)
+- ✅ Prevents pre-finalization drainage
+- ✅ Role-based access control (Admin role)
+- ✅ Pausable claim operations
+
+### 2️⃣ SolviraVesting.sol
+
+Manages **77,227,200 SLV** (22.99% of total supply) for founder and investor allocations:
 
 ### Vesting Allocations
 
@@ -208,7 +276,7 @@ The **SolviraVesting.sol** contract manages **77,246,400 SLV** (23% of total sup
 |-------------|------------|--------------|-------|----------------|----------------|
 | **Founder Principal** | 15.02% | 50,467,200 | 24 months | 36 months linear | **60 months** |
 | **Founder Ops** | 2.97% | 9,979,200 | 6 months | 50 months linear | **56 months** |
-| **Investors** | 5.00% | 16,800,000 | None | 90 days linear | **90 days** |
+| **Investors** | 5.00% | 16,800,000 | 30 days | 180 days linear | **210 days** |
 
 ### Vesting Timelines (Visual)
 
@@ -230,12 +298,13 @@ Vesting:       └────────────────────�
 Unlock: 0%    0%                                        100%
 ```
 
-**Investors (90 days):**
+**Investors (210 days total = 30 days cliff + 180 days linear):**
 ```
-Day:    0─────────────────────────────────────────────────90
-        │                                                  │
-Vesting:└──────────────────────────────────────────────────┘ Linear (no cliff)
-Unlock: 0%                                               100%
+Day:    0──────────30────────────────────────────────────210
+        │          │                                       │
+Cliff:  └──────────┘ 30 days (no unlock)
+Vesting:           └───────────────────────────────────┘ 180 days linear
+Unlock: 0%        0%                                   100%
 ```
 
 ### Critical Security Features
@@ -277,7 +346,8 @@ Built using **OpenZeppelin v5.x**, deployed with **Solidity 0.8.26**:
 - ✅ **Multi-Sig Governance (Gnosis Safe)** – set at deployment  
 - ✅ **Reentrancy Protection** – `nonReentrant` on PoTT  
 - ✅ **Role-Based Access Control** – `ADMIN_ROLE`, `PAUSER_ROLE`, `POTT_OPERATOR_ROLE`  
-- ✅ **Anti-Whale Guard** – configurable `maxHoldAmount` with whitelist  
+- ✅ **Anti-Whale Protection** – dual safeguards: `maxHoldAmount` (1%) + `maxTxAmount` (0.2%) with whitelist bypass  
+- ✅ **MaxTx Anti-Honeypot** – 0.1% minimum floor prevents malicious transaction limits  
 - ✅ **Emergency Pause** – full transfer freeze in case of incident  
 - ✅ **Fixed Total Supply** – no mint, no inflation  
 - ✅ **Basis Points Precision** – 0.01% granularity for fees  
@@ -313,14 +383,26 @@ Production-grade vesting with **maximum security**:
 
 ## 🛍️ PoTT – Proof of Tangible Transaction
 
-The **PoTT mechanism** powers real-world payments for physical silver.
+The **PoTT mechanism** enables **crypto-to-merchant payments** through SOLVIRA's RWA payment middleware. This revolutionary protocol **connects crypto holders to independent precious metal dealers**.
+
+**🚨 CRITICAL: SOLVIRA does NOT:**
+- ❌ Hold, warehouse, or custody any physical silver/gold
+- ❌ Source, purchase, or store precious metals
+- ❌ Act as a dealer or merchant itself
+- ❌ Maintain any reserve or vault
+
+**✅ SOLVIRA ONLY:**
+- ✅ Provides on-chain payment rails (ERC20 token transfer)
+- ✅ Connects buyers to **independent third-party merchants** (Comptoir partner network)
+- ✅ Merchants (NOT SOLVIRA) custody, source, and deliver the physical metals
 
 When a user pays a merchant in SLV, the PoTT function:
 
 1. **Burns** a programmable fraction of the amount (deflationary effect)  
-2. Sends a **fee** to the **Treasury** (for backing, operations, & silver sourcing)  
-3. Sends the **net amount** to the **merchant**  
-4. Emits a detailed event for full on-chain transparency  
+2. Sends a **fee** to the **Treasury** (for protocol development and operations)  
+3. Sends the **net amount** to the **independent merchant wallet**  
+4. Emits a detailed event for full on-chain transparency
+5. **Merchant** (external party) fulfills physical delivery from their own inventory  
 
 ### Code Example
 
@@ -577,9 +659,9 @@ npx hardhat docgen
 | Phase | Timeline | Objective | Status |
 |-------|----------|-----------|--------|
 | **Phase 1** | Q4 2025 | Contract V6, vesting system, dual audits (9.0 & 9.5), brand identity, bilingual website | ✅ **COMPLETED** |
-| **Phase 2** | H1 2026 | Base mainnet launch, Uniswap listing, first PoTT live with physical silver partner | 🚀 **IN PROGRESS** |
+| **Phase 2** | H1 2026 | Base mainnet launch, Uniswap listing, first merchant integration via PoTT payment rails | 🚀 **IN PROGRESS** |
 | **Phase 3** | H2 2026 | Merchant mobile app, ecosystem expansion, silver dealer network | 📋 **PLANNED** |
-| **Phase 4** | 2027+ | Tier-1 CEX listings, international rollout, Digital Silver industry standard | 🔮 **VISION** |
+| **Phase 4** | 2027+ | Tier-1 CEX listings, international rollout, RWA payment middleware standard | 🔮 **VISION** |
 
 ---
 
