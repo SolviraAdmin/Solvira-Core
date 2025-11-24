@@ -24,9 +24,10 @@ contract SolviraToken is ERC20, ERC20Burnable, ERC20Permit, AccessControl, Pausa
     address public governance;
     address public timelock; // TimelockController (48h delay for all admin operations)
 
-    // --- WALLET ADDRESSES (2 only) ---
+    // --- WALLET ADDRESSES (3 only) ---
     address public liquidityWallet;
     address public vestingContractAddress;
+    address public operationalVestingAddress;
 
     // --- CONFIGURATION ---
     uint16 public burnRateBPS = 100; // 100 Basis Points = 1.00%
@@ -55,6 +56,7 @@ contract SolviraToken is ERC20, ERC20Burnable, ERC20Permit, AccessControl, Pausa
     constructor(
         address _liquidityWallet,
         address _vestingContractAddress,
+        address _operationalVestingAddress,
         address _timelockAddress
     )
     ERC20("SOLVIRA", "SLV")
@@ -63,10 +65,12 @@ contract SolviraToken is ERC20, ERC20Burnable, ERC20Permit, AccessControl, Pausa
         // 1. SAFETY CHECKS
         require(_liquidityWallet != address(0), "Liquidity Zero");
         require(_vestingContractAddress != address(0), "Vesting Zero");
+        require(_operationalVestingAddress != address(0), "Operational Vesting Zero");
         require(_timelockAddress != address(0), "Timelock Zero");
 
         liquidityWallet = _liquidityWallet;
         vestingContractAddress = _vestingContractAddress;
+        operationalVestingAddress = _operationalVestingAddress;
         timelock = _timelockAddress;
 
         // 2. GOVERNANCE SETUP (Timelock Architecture)
@@ -85,11 +89,12 @@ contract SolviraToken is ERC20, ERC20Burnable, ERC20Permit, AccessControl, Pausa
         emit TimelockConfigured(timelock);
 
         // Whitelisting (simplified - only essential addresses)
-        isWhitelisted[governance] = true;              // Safe multi-sig
-        isWhitelisted[timelock] = true;                // Timelock controller
-        isWhitelisted[address(this)] = true;           // Token contract
-        isWhitelisted[liquidityWallet] = true;         // Liquidity provider
-        isWhitelisted[vestingContractAddress] = true;  // Vesting contract
+        isWhitelisted[governance] = true;                    // Safe multi-sig
+        isWhitelisted[timelock] = true;                      // Timelock controller
+        isWhitelisted[address(this)] = true;                 // Token contract
+        isWhitelisted[liquidityWallet] = true;               // Liquidity provider
+        isWhitelisted[vestingContractAddress] = true;        // Vesting contract (founder/investor)
+        isWhitelisted[operationalVestingAddress] = true;     // Operational vesting (community/marketing/dev)
 
         // Anti-Whale Setup (1% of total supply)
         maxHoldAmount = MAX_SUPPLY / 100;
@@ -100,35 +105,32 @@ contract SolviraToken is ERC20, ERC20Burnable, ERC20Permit, AccessControl, Pausa
         // 3. DISTRIBUTION BLOCK
         // All percentages use basis points for precision (1 BP = 0.01%)
         
-        // Operational wallets → INITIAL_SAFE (Gnosis Safe manages everything)
-        uint256 communityShare = (MAX_SUPPLY * 2800) / 10000;    // 28.00%
-        uint256 treasuryShare = (MAX_SUPPLY * 1200) / 10000;     // 12.00%
-        uint256 marketingShare = (MAX_SUPPLY * 1200) / 10000;    // 12.00%
-        uint256 devShare = (MAX_SUPPLY * 1000) / 10000;          // 10.00%
+        // 🔐 SECURITY FIX: Split operational funds between Safe (liquid) and OperationalVesting (time-locked)
         
         // Liquidity wallet (external DEX/AMM)
         uint256 liquidityShare = (MAX_SUPPLY * 1500) / 10000;    // 15.00%
         
-        // Vesting allocations → Vesting Contract (manages all vesting logic)
+        // Operational Vesting allocations → OperationalVesting Contract
+        uint256 communityShare = (MAX_SUPPLY * 2800) / 10000;    // 28.00%
+        uint256 marketingShare = (MAX_SUPPLY * 1200) / 10000;    // 12.00%
+        uint256 devShare = (MAX_SUPPLY * 1000) / 10000;          // 10.00%
+        uint256 totalOperationalVesting = communityShare + marketingShare + devShare; // 50.00%
+        
+        // Founder/Investor Vesting allocations → SolviraVesting Contract
         uint256 founderVestingShare = (MAX_SUPPLY * 1502) / 10000;    // 15.02%
         uint256 founderPersonalShare = (MAX_SUPPLY * 297) / 10000;    // 2.97%
         uint256 investorShare = (MAX_SUPPLY * 500) / 10000;           // 5.00%
+        uint256 totalFounderInvestorVesting = founderVestingShare + founderPersonalShare + investorShare; // 22.99%
 
-        // Calculate total vesting
-        uint256 totalVestingShare = founderVestingShare + founderPersonalShare + investorShare;
-        
-        // Calculate Safe allocation (all operational funds)
-        uint256 safeShare = communityShare + treasuryShare + marketingShare + devShare;
-
-        // Calculate total allocated and add remainder to Safe
-        uint256 allocated = safeShare + liquidityShare + totalVestingShare;
-        uint256 remainder = MAX_SUPPLY - allocated;
-        safeShare += remainder;
+        // Calculate total allocated and add remainder to Safe (liquid emergency funds)
+        uint256 allocated = liquidityShare + totalOperationalVesting + totalFounderInvestorVesting;
+        uint256 safeShare = MAX_SUPPLY - allocated;  // ~12.01% remaining for liquid operations
 
         // MINT DISTRIBUTION
-        _mint(INITIAL_SAFE, safeShare);                    // 62.01% + remainder → Safe multi-sig
-        _mint(liquidityWallet, liquidityShare);            // 15.00% → Liquidity
-        _mint(vestingContractAddress, totalVestingShare);  // 23.00% → Vesting Contract
+        _mint(INITIAL_SAFE, safeShare);                               // 12.01% → Safe multi-sig (liquid emergency funds)
+        _mint(liquidityWallet, liquidityShare);                       // 15.00% → Liquidity
+        _mint(operationalVestingAddress, totalOperationalVesting);    // 50.00% → Operational Vesting (time-locked)
+        _mint(vestingContractAddress, totalFounderInvestorVesting);   // 22.99% → Founder/Investor Vesting (time-locked)
     }
 
     // ==========================================
@@ -225,4 +227,3 @@ contract SolviraToken is ERC20, ERC20Burnable, ERC20Permit, AccessControl, Pausa
         super._update(from, to, value);
     }
 }
-
