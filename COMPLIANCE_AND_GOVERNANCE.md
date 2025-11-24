@@ -45,7 +45,10 @@ The governance system is designed to **eliminate "Key Man Risk"** and ensure a m
 
 | Function | Mechanism | Control Entity | Transparency |
 |:---------|:----------|:---------------|:-------------|
-| **Operational Treasury (62.01% SLV)** | Gnosis Safe Multi-Sig (2 out of 3) | 3 Signers (Distributed) | Public on BaseScan |
+| **Liquid Emergency Funds (12.01% SLV)** | Gnosis Safe Multi-Sig (2 out of 3) | 3 Signers (Distributed) | Public on BaseScan |
+| **Operational Funds (50% SLV)** | OperationalVesting Contract | Time-locked progressive unlock | Code-enforced vesting schedules |
+| **Founder/Investor Funds (22.99% SLV)** | SolviraVesting Contract | Time-locked progressive unlock | Code-enforced vesting schedules |
+| **Liquidity Pools (15% SLV)** | External DEX/AMM Wallets | Community LP providers | Public on BaseScan |
 | **Parameter Updates** | Timelock Controller (48 Hours) | Gnosis Safe (Proposer) | Mandatory delay for all admin actions |
 | **Token & PoTT Management** | SOLVIRA.sol Contract | SolviraTimelock.sol | Code-enforced security |
 
@@ -55,9 +58,29 @@ The governance system is designed to **eliminate "Key Man Risk"** and ensure a m
 - ✅ No single private key has direct control over the project's liquid assets
 - ✅ All transactions are publicly verifiable on BaseScan
 - ✅ 48-hour community window for all parameter changes
+- 🔐 **SECURITY FIX (Nov 2025):** 72.99% of treasury is now time-locked in vesting contracts
 
 **Gnosis Safe Address (Base Mainnet):**  
 `0xF1e029a360D2955B1Ea5bc0e2E210b706d1edBF7`
+
+### Operational Vesting Protection
+
+To prevent instant drainage of operational funds, **50% of total supply (168M SLV)** is secured in the **OperationalVesting** contract with progressive unlock schedules:
+
+| Budget Category | Allocation | Vesting Schedule | Purpose |
+|:----------------|:-----------|:-----------------|:--------|
+| **Community** | 28% (94.08M SLV) | 3-month cliff + 24-month linear | Community rewards, airdrops, ecosystem growth |
+| **Marketing** | 12% (40.32M SLV) | 1-month cliff + 12-month linear | Brand awareness, partnerships, user acquisition |
+| **Development** | 10% (33.6M SLV) | 1-month cliff + 18-month linear | Protocol development, security audits, infrastructure |
+
+**Total Operational Vesting:** 50% (168M SLV)  
+**Liquid Safe Reserve:** 12.01% (40.3M SLV) for emergency operational needs
+
+This architecture ensures:
+- 🔒 **No instant treasury drain:** Even if 2/3 Safe signers collude, 87.99% remains protected
+- ⏳ **Progressive unlock:** Operational funds release gradually over 13-27 months
+- 💰 **Liquid reserves:** 12% remains accessible for urgent operational needs
+- ✅ **Community protection:** Time-locked funds cannot be stolen or misappropriated
 
 ---
 
