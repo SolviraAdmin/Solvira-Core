@@ -32,6 +32,7 @@ contract SolviraToken is ERC20, ERC20Burnable, ERC20Permit, AccessControl, Pausa
     // --- CONFIGURATION ---
     uint16 public burnRateBPS = 100; // 100 Basis Points = 1.00%
     uint16 public feeRateBPS = 100;  // 100 Basis Points = 1.00%
+    uint16 public tradingTaxBPS = 200; // 200 Basis Points = 2.00% (marketing tax on trades)
 
     // Security Ratchet: Max increase of 0.5% per update to prevent sudden hikes
     uint16 public constant MAX_RATE_CHANGE = 50;
@@ -52,6 +53,7 @@ contract SolviraToken is ERC20, ERC20Burnable, ERC20Permit, AccessControl, Pausa
     event MaxTxUpdated(uint256 newMaxTx);
     event AntiWhaleToggled(bool isActive);
     event WhitelistUpdated(address indexed account, bool status);
+    event TradingTaxUpdated(uint16 oldTax, uint16 newTax);
 
     constructor(
         address _liquidityWallet,
@@ -209,21 +211,43 @@ contract SolviraToken is ERC20, ERC20Burnable, ERC20Permit, AccessControl, Pausa
         emit AntiWhaleToggled(_active);
     }
 
+    function setTradingTax(uint16 _newTax) external onlyRole(ADMIN_ROLE) {
+        require(_newTax <= 500, "Trading tax cannot exceed 5%");
+        emit TradingTaxUpdated(tradingTaxBPS, _newTax);
+        tradingTaxBPS = _newTax;
+    }
+
     function pause() external onlyRole(PAUSER_ROLE) { _pause(); }
     function unpause() external onlyRole(PAUSER_ROLE) { _unpause(); }
 
     function _update(address from, address to, uint256 value) internal override(ERC20) whenNotPaused {
-        if (from != address(0) && to != address(0) && antiWhaleActive) {
-            // Max Transaction Amount check (both sender and receiver must not be whitelisted)
-            if (!isWhitelisted[from] && !isWhitelisted[to]) {
-                require(value <= maxTxAmount, "Exceeds MaxTx");
+        if (from != address(0) && to != address(0)) {
+            // Anti-whale checks
+            if (antiWhaleActive) {
+                // Max Transaction Amount check (both sender and receiver must not be whitelisted)
+                if (!isWhitelisted[from] && !isWhitelisted[to]) {
+                    require(value <= maxTxAmount, "Exceeds MaxTx");
+                }
+                
+                // Max Hold Amount check (only receiver)
+                if (!isWhitelisted[to]) {
+                    require(balanceOf(to) + value <= maxHoldAmount, "Anti-Whale: Limit exceeded");
+                }
             }
             
-            // Max Hold Amount check (only receiver)
-            if (!isWhitelisted[to]) {
-                require(balanceOf(to) + value <= maxHoldAmount, "Anti-Whale: Limit exceeded");
+            // Trading Tax: applies only if BOTH sender AND receiver are NOT whitelisted
+            if (tradingTaxBPS > 0 && !isWhitelisted[from] && !isWhitelisted[to]) {
+                uint256 taxAmount = (value * tradingTaxBPS) / 10000;
+                uint256 netAmount = value - taxAmount;
+                
+                // Transfer tax to Safe (for marketing)
+                super._update(from, INITIAL_SAFE, taxAmount);
+                // Transfer remaining amount to recipient
+                super._update(from, to, netAmount);
+                return;
             }
         }
         super._update(from, to, value);
     }
 }
+
