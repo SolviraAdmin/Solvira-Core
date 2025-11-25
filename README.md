@@ -200,6 +200,36 @@ All PoTT fees use **Basis Points (BPS)**:
 - Allows precise configurations like `0.75%` burn + `1.25%` fee
 - **10x more precise** than percentage-based systems
 
+### 7. 💸 Trading Tax (Marketing Fund)
+
+A **2% trading tax** is applied on all transfers between non-whitelisted addresses:
+
+- **Default Rate:** `200 BPS` (2.00%)
+- **Maximum Cap:** `500 BPS` (5.00%) – hardcoded limit
+- **Destination:** All tax revenue sent to `INITIAL_SAFE` (Gnosis Safe multi-sig)
+- **Purpose:** Fund marketing, listings, partnerships, and ecosystem growth
+
+**When Trading Tax Applies:**
+- ✅ DEX buys (user ← Uniswap pool)
+- ✅ DEX sells (user → Uniswap pool)
+- ✅ P2P transfers between regular users
+
+**When Trading Tax Does NOT Apply:**
+- ❌ Transfers involving whitelisted addresses (Safe, Timelock, Vesting contracts, Liquidity)
+- ❌ PoTT payments (use separate burn + fee system)
+- ❌ Minting/burning operations
+
+**Admin Control:**
+```solidity
+// Adjust trading tax (requires ADMIN_ROLE + 48h Timelock)
+function setTradingTax(uint16 _newTax) external onlyRole(ADMIN_ROLE) {
+    require(_newTax <= 500, "Trading tax cannot exceed 5%");
+    tradingTaxBPS = _newTax;
+}
+```
+
+> 💡 **Note:** The trading tax can be set to `0` after launch to remove it entirely once marketing objectives are achieved.
+
 ---
 
 ## 💎 Tokenomics
@@ -351,6 +381,7 @@ Built using **OpenZeppelin v5.x**, deployed with **Solidity 0.8.26**:
 - ✅ **Emergency Pause** – full transfer freeze in case of incident  
 - ✅ **Fixed Total Supply** – no mint, no inflation  
 - ✅ **Basis Points Precision** – 0.01% granularity for fees  
+- ✅ **Trading Tax (Marketing)** – 2% tax on trades between non-whitelisted addresses (configurable 0-5%, funds marketing)  
 
 ### SolviraVesting.sol (Vesting Logic)
 
