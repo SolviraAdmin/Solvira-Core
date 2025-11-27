@@ -13,7 +13,7 @@ interface IERC20 {
 
 /**
 * @title SolviraVesting
-* @notice Production-grade vesting contract for SOLVIRA (SLV) token
+* @notice Production-grade vesting contract for SOLVIRA (SVRA) token
 * @dev Features: Founder (5-year), FounderOps (56-month), Investors (30-day cliff + 180-day linear)
 */
 contract SolviraVesting is AccessControl, Pausable, ReentrancyGuard {
@@ -22,7 +22,7 @@ contract SolviraVesting is AccessControl, Pausable, ReentrancyGuard {
    bytes32 public constant VESTING_MANAGER_ROLE = keccak256("VESTING_MANAGER_ROLE");
 
    // ---------------------- IMMUTABLES ----------------------
-   IERC20 public immutable slvToken;
+   IERC20 public immutable svraToken;
    uint256 public immutable deploymentTimestamp;
 
    // ---------------------- VESTING CONSTANTS ----------------------
@@ -42,7 +42,7 @@ contract SolviraVesting is AccessControl, Pausable, ReentrancyGuard {
    uint256 public constant INVESTOR_TOTAL_DURATION = INVESTOR_CLIFF_DURATION + INVESTOR_VESTING_DURATION; // 210 days total
 
    // 🔐 SECURITY: Expected allocations (must match SOLVIRA.sol distribution)
-   // Total Supply: 336,000,000 SLV (with 18 decimals)
+   // Total Supply: 336,000,000 SVRA (with 18 decimals)
    uint256 public constant EXPECTED_FOUNDER_ALLOCATION = 50_467_200 * 10**18;     // 15.02%
    uint256 public constant EXPECTED_FOUNDER_OPS_ALLOCATION = 9_979_200 * 10**18;  // 2.97%
    uint256 public constant EXPECTED_INVESTOR_ALLOCATION = 16_800_000 * 10**18;    // 5.00%
@@ -86,9 +86,9 @@ contract SolviraVesting is AccessControl, Pausable, ReentrancyGuard {
    event AllocationsFinalized(uint256 founderAlloc, uint256 founderOpsAlloc, uint256 timestamp);
 
    // ---------------------- CONSTRUCTOR ----------------------
-   constructor(address _slvToken) {
-       require(_slvToken != address(0), "SolviraVesting: zero slvToken");
-       slvToken = IERC20(_slvToken);
+   constructor(address _svraTokenAddress) {
+       require(_svraTokenAddress != address(0), "SolviraVesting: zero address");
+       svraToken = IERC20(_svraTokenAddress);
 
        deploymentTimestamp = block.timestamp;
 
@@ -227,7 +227,7 @@ contract SolviraVesting is AccessControl, Pausable, ReentrancyGuard {
            revert("Not authorized");
        }
 
-       require(slvToken.transfer(msg.sender, claimable), "Transfer failed");
+       require(svraToken.transfer(msg.sender, claimable), "Transfer failed");
        emit TokensClaimed(msg.sender, claimable);
    }
 
@@ -248,17 +248,17 @@ contract SolviraVesting is AccessControl, Pausable, ReentrancyGuard {
        uint256 founderOpsReserved = founderOpsVesting.totalAllocation - founderOpsVesting.claimed;
        
        // 🔐 CRITICAL SECURITY FIX: Reserve the ENTIRE investor pool (5%), not just allocated investors
-       // This prevents draining the 16.8M SLV investor pool before investors are added
+       // This prevents draining the 16.8M SVRA investor pool before investors are added
        uint256 investorPoolReserved = EXPECTED_INVESTOR_ALLOCATION - totalInvestorClaimed;
 
        uint256 totalReserved = founderReserved + founderOpsReserved + investorPoolReserved;
 
-       uint256 currentBalance = slvToken.balanceOf(address(this));
+       uint256 currentBalance = svraToken.balanceOf(address(this));
 
        // Critical Security Check: Ensure balance after withdrawal >= tokens reserved for future claims
        require(currentBalance >= totalReserved + amount, "Exceeds unassigned tokens");
 
-       require(slvToken.transfer(to, amount), "Transfer failed");
+       require(svraToken.transfer(to, amount), "Transfer failed");
        emit UnassignedWithdrawn(to, amount);
    }
 
@@ -344,5 +344,4 @@ contract SolviraVesting is AccessControl, Pausable, ReentrancyGuard {
        _unpause();
    }
 }
-
 
