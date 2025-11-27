@@ -45,10 +45,10 @@ The governance system is designed to **eliminate "Key Man Risk"** and ensure a m
 
 | Function | Mechanism | Control Entity | Transparency |
 |:---------|:----------|:---------------|:-------------|
-| **Liquid Emergency Funds (12.01% SLV)** | Gnosis Safe Multi-Sig (2 out of 3) | 3 Signers (Distributed) | Public on BaseScan |
-| **Operational Funds (50% SLV)** | OperationalVesting Contract | Time-locked progressive unlock | Code-enforced vesting schedules |
-| **Founder/Investor Funds (22.99% SLV)** | SolviraVesting Contract | Time-locked progressive unlock | Code-enforced vesting schedules |
-| **Liquidity Pools (15% SLV)** | External DEX/AMM Wallets | Community LP providers | Public on BaseScan |
+| **Liquid Emergency Funds (12.01% SVRA)** | Gnosis Safe Multi-Sig (2 out of 3) | 3 Signers (Distributed) | Public on BaseScan |
+| **Operational Funds (50% SVRA)** | OperationalVesting Contract | Time-locked progressive unlock | Code-enforced vesting schedules |
+| **Founder/Investor Funds (22.99% SVRA)** | SolviraVesting Contract | Time-locked progressive unlock | Code-enforced vesting schedules |
+| **Liquidity Pools (15% SVRA)** | External DEX/AMM Wallets | Community LP providers | Public on BaseScan |
 | **Parameter Updates** | Timelock Controller (48 Hours) | Gnosis Safe (Proposer) | Mandatory delay for all admin actions |
 | **Token & PoTT Management** | SOLVIRA.sol Contract | SolviraTimelock.sol | Code-enforced security |
 
@@ -65,16 +65,16 @@ The governance system is designed to **eliminate "Key Man Risk"** and ensure a m
 
 ### Operational Vesting Protection
 
-To prevent instant drainage of operational funds, **50% of total supply (168M SLV)** is secured in the **OperationalVesting** contract with progressive unlock schedules:
+To prevent instant drainage of operational funds, **50% of total supply (168M SVRA)** is secured in the **OperationalVesting** contract with progressive unlock schedules:
 
 | Budget Category | Allocation | Vesting Schedule | Purpose |
 |:----------------|:-----------|:-----------------|:--------|
-| **Community** | 28% (94.08M SLV) | 3-month cliff + 24-month linear | Community rewards, airdrops, ecosystem growth |
-| **Marketing** | 12% (40.32M SLV) | 1-month cliff + 12-month linear | Brand awareness, partnerships, user acquisition |
-| **Development** | 10% (33.6M SLV) | 1-month cliff + 18-month linear | Protocol development, security audits, infrastructure |
+| **Community** | 28% (94.08M SVRA) | 3-month cliff + 24-month linear | Community rewards, airdrops, ecosystem growth |
+| **Marketing** | 12% (40.32M SVRA) | 1-month cliff + 12-month linear | Brand awareness, partnerships, user acquisition |
+| **Development** | 10% (33.6M SVRA) | 1-month cliff + 18-month linear | Protocol development, security audits, infrastructure |
 
-**Total Operational Vesting:** 50% (168M SLV)  
-**Liquid Safe Reserve:** 12.01% (40.3M SLV) for emergency operational needs
+**Total Operational Vesting:** 50% (168M SVRA)  
+**Liquid Safe Reserve:** 12.01% (40.3M SVRA) for emergency operational needs
 
 This architecture ensures:
 - 🔒 **No instant treasury drain:** Even if 2/3 Safe signers collude, 87.99% remains protected
@@ -232,7 +232,7 @@ Even in the launch phase, SOLVIRA enforces strict standards to prevent illicit u
 **SOLVIRA respects user privacy while maintaining compliance:**
 
 - ✅ **On-chain transactions:** Pseudonymous (wallet addresses only)
-- ✅ **No KYC for token holders:** Holding SLV does not require identity verification
+- ✅ **No KYC for token holders:** Holding SVRA does not require identity verification
 - ⚠️ **Merchant settlements:** KYC/AML performed by regulated PSPs during fiat off-ramp
 - 🔒 **Data minimization:** Only necessary information collected for compliance
 
