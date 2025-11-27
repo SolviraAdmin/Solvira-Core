@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
-/// @title SOLVIRA Token (SLV)
+/// @title SOLVIRA Token (SVRA)
 /// @notice Deflationary ERC20 with PoTT settlement, Safe-governed parameters.
 /// @custom:security-contact security@solvira.io
 contract SolviraToken is ERC20, ERC20Burnable, ERC20Permit, AccessControl, Pausable, ReentrancyGuard {
@@ -61,7 +61,7 @@ contract SolviraToken is ERC20, ERC20Burnable, ERC20Permit, AccessControl, Pausa
         address _operationalVestingAddress,
         address _timelockAddress
     )
-    ERC20("SOLVIRA", "SLV")
+    ERC20("SOLVIRA", "SVRA")
     ERC20Permit("SOLVIRA")
     {
         // 1. SAFETY CHECKS
