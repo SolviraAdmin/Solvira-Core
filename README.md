@@ -6,7 +6,7 @@
 ![SOLVIRA Audit](https://img.shields.io/badge/SOLVIRA%20V6%20Audit-9.0%2F10-success?style=for-the-badge)
 ![Vesting Audit](https://img.shields.io/badge/Vesting%20Audit-9.5%2F10-brightgreen?style=for-the-badge)
 
-**SOLVIRA (SLV)** is a deflationary utility payment token serving as a specialized payment layer for precious metal dealers. **No reserve, no backing, no convertibility — only payment utility** enabling on-chain → off-chain tangible purchases through a secure Off-chain merchant settlement middleware for precious metals.
+**SOLVIRA (SVRA)** is a deflationary utility payment token serving as a specialized payment layer for precious metal dealers. **No reserve, no backing, no convertibility — only payment utility** enabling on-chain → off-chain tangible purchases through a secure Off-chain merchant settlement middleware for precious metals.
 
 This repository contains the production-ready smart contracts for **SOLVIRA V6** and **SolviraVesting**, both deployed on **Base mainnet** (Ethereum L2).
 
@@ -47,13 +47,13 @@ SOLVIRA is a **crypto-to-merchant payment protocol** specialized for precious me
 **IMPORTANT LEGAL NOTICE:**
 
 - ✅ **SOLVIRA is a utility token** for payment processing only
-- ❌ **NO backing**: SLV is not backed by silver, gold, or any physical asset
+- ❌ **NO backing**: SVRA is not backed by silver, gold, or any physical asset
 - ❌ **NO reserve**: There is no reserve pool of precious metals
-- ❌ **NO convertibility**: SLV cannot be redeemed or exchanged for physical silver
-- ❌ **NO ownership rights**: Holding SLV does not grant ownership of any tangible assets
-- ✅ **Payment middleware only**: SLV facilitates crypto-to-merchant payments for tangible purchases
+- ❌ **NO convertibility**: SVRA cannot be redeemed or exchanged for physical silver
+- ❌ **NO ownership rights**: Holding SVRA does not grant ownership of any tangible assets
+- ✅ **Payment middleware only**: SVRA facilitates crypto-to-merchant payments for tangible purchases
 
-**SLV tokens provide payment utility ONLY. They represent no claim on physical assets.**
+**SVRA tokens provide payment utility ONLY. They represent no claim on physical assets.**
 
 ---
 
@@ -69,18 +69,18 @@ SOLVIRA consists of **three production-grade smart contracts** with dual-vesting
 │  ┌──────────────────┐       ┌──────────────────┐  ┌─────────────────┐ │
 │  │   SOLVIRA.sol    │       │OperationalVesting│  │SolviraVesting.sol│ │
 │  │   (ERC20 Token)  │─mints─│      (50%)       │  │    (22.99%)     │ │
-│  │                  │       │   168M SLV       │  │   77.2M SLV     │ │
-│  │  336M SLV Total  │       └──────────────────┘  └─────────────────┘ │
+│  │                  │       │   168M SVRA       │  │   77.2M SVRA     │ │
+│  │  336M SVRA Total  │       └──────────────────┘  └─────────────────┘ │
 │  └──────────────────┘                                                  │
 │         │                                                               │
 │    Distribution:                                                        │
-│    • Safe (Liquid): 12.01%  (40.4M SLV)   Emergency funds only        │
-│    • Liquidity: 15.00%      (50.4M SLV)   DEX pools                   │
-│    • OpVesting: 50.00%      (168M SLV)    Community/Marketing/Dev     │
-│    • SolviraVesting: 22.99% (77.2M SLV)   Founder/Investor vesting    │
+│    • Safe (Liquid): 12.01%  (40.4M SVRA)   Emergency funds only        │
+│    • Liquidity: 15.00%      (50.4M SVRA)   DEX pools                   │
+│    • OpVesting: 50.00%      (168M SVRA)    Community/Marketing/Dev     │
+│    • SolviraVesting: 22.99% (77.2M SVRA)   Founder/Investor vesting    │
 │                                                                         │
-│  🔐 SECURITY: 87.99% Time-Locked (295.6M SLV)                          │
-│               12.01% Liquid in Multi-Sig Safe (40.4M SLV)              │
+│  🔐 SECURITY: 87.99% Time-Locked (295.6M SVRA)                          │
+│               12.01% Liquid in Multi-Sig Safe (40.4M SVRA)              │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -149,20 +149,20 @@ SOLVIRA implements a **revolutionary dual-layer protection** to prevent market m
 
 #### Layer 1: Max Hold Amount (1% of supply)
 - **Purpose:** Prevents wallet concentration and whale accumulation
-- **Default:** `3,360,000 SLV` (1% of 336M total supply)
+- **Default:** `3,360,000 SVRA` (1% of 336M total supply)
 - **Applies to:** Receiving wallets only (checked on transfer)
 - **Bypass:** Whitelisted system wallets (Safe, Timelock, Liquidity, Vesting)
 
 #### Layer 2: Max Transaction Amount (0.2% of supply) 🆕
-- **Purpose:** Stabilizes price relative to real liquidity (15% pool = 50.4M SLV)
-- **Default:** `672,000 SLV` (0.2% of 336M total supply)
+- **Purpose:** Stabilizes price relative to real liquidity (15% pool = 50.4M SVRA)
+- **Default:** `672,000 SVRA` (0.2% of 336M total supply)
 - **Represents:** 1.33% of available liquidity (optimal for price stability)
-  - **Calculation:** 672,000 SLV ÷ 50,400,000 SLV liquidity = 1.33%
+  - **Calculation:** 672,000 SVRA ÷ 50,400,000 SVRA liquidity = 1.33%
   - **Impact:** Single transaction can move at most 1.33% of pool depth
 - **Applies to:** Both sender AND receiver must be non-whitelisted
 - **Anti-Honeypot Protection:** 0.1% minimum floor enforced on-chain
-  - **Minimum:** `336,000 SLV` (336M × 0.1% = 336,000)
-  - **Function:** `setMaxTxAmount()` reverts if `_amount < 336,000 SLV`
+  - **Minimum:** `336,000 SVRA` (336M × 0.1% = 336,000)
+  - **Function:** `setMaxTxAmount()` reverts if `_amount < 336,000 SVRA`
   - **Governance:** Changes require `ADMIN_ROLE` + 48h Timelock delay
 - **Admin Control:** `ADMIN_ROLE` can adjust via `setMaxTxAmount()` with 48h Timelock delay
 
@@ -175,12 +175,12 @@ SOLVIRA implements a **revolutionary dual-layer protection** to prevent market m
 
 **Comparison Table:**
 
-| Protection | Default Value | SLV Amount | % of Liquidity | Bypassed When |
+| Protection | Default Value | SVRA Amount | % of Liquidity | Bypassed When |
 |------------|--------------|------------|----------------|---------------|
 | **maxHoldAmount** | 1.0% | 3,360,000 | 6.67% | Receiver is whitelisted |
 | **maxTxAmount** | 0.2% | 672,000 | 1.33% | Sender OR receiver is whitelisted |
 
-> 💡 **Design Rationale:** With 15% liquidity (50.4M SLV), a 0.2% transaction limit allows meaningful trades while preventing single transactions from moving >1.3% of the pool depth.
+> 💡 **Design Rationale:** With 15% liquidity (50.4M SVRA), a 0.2% transaction limit allows meaningful trades while preventing single transactions from moving >1.3% of the pool depth.
 
 ### 5. ⚡ Modern Standards (ERC20Permit – EIP-2612)
 
@@ -235,9 +235,9 @@ function setTradingTax(uint16 _newTax) external onlyRole(ADMIN_ROLE) {
 ## 💎 Tokenomics
 
 - **Name:** SOLVIRA  
-- **Symbol:** SLV  
+- **Symbol:** SVRA  
 - **Decimals:** 18  
-- **Max Supply:** `336,000,000 SLV` (fixed & immutable)  
+- **Max Supply:** `336,000,000 SVRA` (fixed & immutable)  
 - **Deflationary:** Burns reduce circulating supply via PoTT  
 
 ### Initial Distribution Architecture
@@ -256,7 +256,7 @@ constructor(
 
 **On deployment, tokens are distributed as follows:**
 
-| Recipient | Allocation | Amount (SLV) | Purpose |
+| Recipient | Allocation | Amount (SVRA) | Purpose |
 |-----------|------------|--------------|---------|
 | **Gnosis Safe (Liquid)** | 12.01% | 40,372,800 | Emergency operational funds only (multi-sig controlled) |
 | **Liquidity Wallet** | 15.00% | 50,400,000 | DEX liquidity (Uniswap, etc.) |
@@ -280,9 +280,9 @@ SOLVIRA implements **two independent vesting contracts** for maximum security:
 
 ### 1️⃣ OperationalVesting.sol
 
-Manages **168,000,000 SLV** (50% of total supply) for operational budgets with progressive unlock schedules:
+Manages **168,000,000 SVRA** (50% of total supply) for operational budgets with progressive unlock schedules:
 
-| Category | Allocation | Amount (SLV) | Cliff | Vesting Period | Total Duration |
+| Category | Allocation | Amount (SVRA) | Cliff | Vesting Period | Total Duration |
 |----------|------------|--------------|-------|----------------|----------------|
 | **Community** | 28% | 94,080,000 | 3 months | 24 months linear | **27 months** |
 | **Marketing** | 12% | 40,320,000 | 1 month | 12 months linear | **13 months** |
@@ -290,7 +290,7 @@ Manages **168,000,000 SLV** (50% of total supply) for operational budgets with p
 
 **Security Features:**
 - ✅ Single-use allocation setters (prevents inflation attacks)
-- ✅ Balance verification on initialization (requires exactly 168M SLV)
+- ✅ Balance verification on initialization (requires exactly 168M SVRA)
 - ✅ Triple-checked finalization (allocation + sum + balance verification)
 - ✅ Prevents pre-finalization drainage
 - ✅ Role-based access control (Admin role)
@@ -298,11 +298,11 @@ Manages **168,000,000 SLV** (50% of total supply) for operational budgets with p
 
 ### 2️⃣ SolviraVesting.sol
 
-Manages **77,227,200 SLV** (22.99% of total supply) for founder and investor allocations:
+Manages **77,227,200 SVRA** (22.99% of total supply) for founder and investor allocations:
 
 ### Vesting Allocations
 
-| Beneficiary | Allocation | Amount (SLV) | Cliff | Vesting Period | Total Duration |
+| Beneficiary | Allocation | Amount (SVRA) | Cliff | Vesting Period | Total Duration |
 |-------------|------------|--------------|-------|----------------|----------------|
 | **Founder Principal** | 15.02% | 50,467,200 | 24 months | 36 months linear | **60 months** |
 | **Founder Ops** | 2.97% | 9,979,200 | 6 months | 50 months linear | **56 months** |
@@ -395,7 +395,7 @@ Production-grade vesting with **maximum security**:
 - ✅ **Reentrancy Protection** – `nonReentrant` on claims  
 - ✅ **Pausable Claims** – emergency freeze capability  
 - ✅ **Role-Based Access** – admin separation (DEFAULT_ADMIN, VESTING_MANAGER)  
-- ✅ **Investor Pool Reservation** – protects 16.8M SLV from premature withdrawal  
+- ✅ **Investor Pool Reservation** – protects 16.8M SVRA from premature withdrawal  
 
 ### Contract Summary
 
@@ -427,7 +427,7 @@ The **PoTT mechanism** enables **crypto-to-merchant payments** through SOLVIRA's
 - ✅ Connects buyers to **independent third-party merchants** (Comptoir partner network)
 - ✅ Merchants (NOT SOLVIRA) custody, source, and deliver the physical metals
 
-When a user pays a merchant in SLV, the PoTT function:
+When a user pays a merchant in SVRA, the PoTT function:
 
 1. **Burns** a programmable fraction of the amount (deflationary effect)  
 2. Sends a **fee** to the **Treasury** (for protocol development and operations)  
@@ -512,8 +512,8 @@ function payForGoods(uint256 amount, address merchant)
    ```
 
 4. **Configure vesting allocations**
-   - Set founder principal (50,467,200 SLV)
-   - Set founder ops (9,979,200 SLV)
+   - Set founder principal (50,467,200 SVRA)
+   - Set founder ops (9,979,200 SVRA)
    - Call `finalizeAllocations()` to lock
 
 5. **Add investors** to vesting contract
