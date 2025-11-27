@@ -23,7 +23,7 @@ contract OperationalVesting is AccessControl, Pausable, ReentrancyGuard {
    bytes32 public constant VESTING_MANAGER_ROLE = keccak256("VESTING_MANAGER_ROLE");
 
    // ---------------------- IMMUTABLES ----------------------
-   IERC20 public slvToken;  // Set once during initialization
+   IERC20 public svraToken;  // Set once during initialization
    uint256 public immutable deploymentTimestamp;
    bool public tokenInitialized;
 
@@ -44,7 +44,7 @@ contract OperationalVesting is AccessControl, Pausable, ReentrancyGuard {
    uint256 public constant DEV_TOTAL_DURATION = DEV_CLIFF + DEV_VESTING_DURATION; // 570 days
 
    // 🔐 SECURITY: Expected allocations (must match SOLVIRA.sol distribution)
-   // Total Supply: 336,000,000 SLV (with 18 decimals)
+   // Total Supply: 336,000,000 SVRA (with 18 decimals)
    uint256 public constant EXPECTED_COMMUNITY_ALLOCATION = 94_080_000 * 10**18;  // 28%
    uint256 public constant EXPECTED_MARKETING_ALLOCATION = 40_320_000 * 10**18;  // 12%
    uint256 public constant EXPECTED_DEV_ALLOCATION = 33_600_000 * 10**18;        // 10%
@@ -114,26 +114,26 @@ contract OperationalVesting is AccessControl, Pausable, ReentrancyGuard {
 
    // ---------------------- TOKEN INITIALIZATION ----------------------
    
-   /// @notice Initialize SLV token address (can only be called once)
-   /// @dev MUST be called after SOLVIRA deployment (which mints 168M SLV to this address)
-   /// @dev SECURITY: Verifies contract received expected 168M SLV allocation
-   function initializeToken(address _slvToken) external onlyRole(DEFAULT_ADMIN_ROLE) {
+   /// @notice Initialize SVRA token address (can only be called once)
+   /// @dev MUST be called after SOLVIRA deployment (which mints 168M SVRA to this address)
+   /// @dev SECURITY: Verifies contract received expected 168M SVRA allocation
+   function initializeToken(address _svraToken) external onlyRole(DEFAULT_ADMIN_ROLE) {
        require(!tokenInitialized, "OperationalVesting: token already initialized");
-       require(_slvToken != address(0), "OperationalVesting: zero address");
+       require(_svraToken != address(0), "OperationalVesting: zero address");
        require(!allocationsFinalized, "OperationalVesting: allocations already finalized");
        
-       slvToken = IERC20(_slvToken);
+       svraToken = IERC20(_svraToken);
        
-       // 🔐 CRITICAL SECURITY CHECK: Verify contract received full 168M SLV from SOLVIRA deployment
-       uint256 currentBalance = slvToken.balanceOf(address(this));
+       // 🔐 CRITICAL SECURITY CHECK: Verify contract received full 168M SVRA from SOLVIRA deployment
+       uint256 currentBalance = svraToken.balanceOf(address(this));
        require(
            currentBalance == EXPECTED_TOTAL_OPERATIONAL,
-           "OperationalVesting: incorrect token balance - SOLVIRA must mint 168M SLV first"
+           "OperationalVesting: incorrect token balance - SOLVIRA must mint 168M SVRA first"
        );
        
        tokenInitialized = true;
        
-       emit TokenInitialized(_slvToken);
+       emit TokenInitialized(_svraToken);
    }
 
    // ---------------------- BENEFICIARY MANAGEMENT ----------------------
@@ -174,7 +174,7 @@ contract OperationalVesting is AccessControl, Pausable, ReentrancyGuard {
        require(communityVesting.beneficiary != address(0), "OperationalVesting: beneficiary not set");
        require(communityVesting.totalAllocation == 0, "OperationalVesting: already set");
        require(!allocationsFinalized, "OperationalVesting: allocations finalized");
-       require(_amount == EXPECTED_COMMUNITY_ALLOCATION, "OperationalVesting: must be 94080000 SLV");
+       require(_amount == EXPECTED_COMMUNITY_ALLOCATION, "OperationalVesting: must be 94080000 SVRA");
        communityVesting.totalAllocation = _amount;
    }
 
@@ -185,7 +185,7 @@ contract OperationalVesting is AccessControl, Pausable, ReentrancyGuard {
        require(marketingVesting.beneficiary != address(0), "OperationalVesting: beneficiary not set");
        require(marketingVesting.totalAllocation == 0, "OperationalVesting: already set");
        require(!allocationsFinalized, "OperationalVesting: allocations finalized");
-       require(_amount == EXPECTED_MARKETING_ALLOCATION, "OperationalVesting: must be 40320000 SLV");
+       require(_amount == EXPECTED_MARKETING_ALLOCATION, "OperationalVesting: must be 40320000 SVRA");
        marketingVesting.totalAllocation = _amount;
    }
 
@@ -196,7 +196,7 @@ contract OperationalVesting is AccessControl, Pausable, ReentrancyGuard {
        require(devVesting.beneficiary != address(0), "OperationalVesting: beneficiary not set");
        require(devVesting.totalAllocation == 0, "OperationalVesting: already set");
        require(!allocationsFinalized, "OperationalVesting: allocations finalized");
-       require(_amount == EXPECTED_DEV_ALLOCATION, "OperationalVesting: must be 33600000 SLV");
+       require(_amount == EXPECTED_DEV_ALLOCATION, "OperationalVesting: must be 33600000 SVRA");
        devVesting.totalAllocation = _amount;
    }
 
@@ -228,11 +228,11 @@ contract OperationalVesting is AccessControl, Pausable, ReentrancyGuard {
                                    devVesting.totalAllocation;
        require(
            totalAllocations == EXPECTED_TOTAL_OPERATIONAL,
-           "OperationalVesting: total allocations must equal 168M SLV"
+           "OperationalVesting: total allocations must equal 168M SVRA"
        );
        
-       // 🔐 CRITICAL: Verify contract still holds the full 168M SLV (prevents pre-finalization drainage)
-       uint256 currentBalance = slvToken.balanceOf(address(this));
+       // 🔐 CRITICAL: Verify contract still holds the full 168M SVRA (prevents pre-finalization drainage)
+       uint256 currentBalance = svraToken.balanceOf(address(this));
        require(
            currentBalance == EXPECTED_TOTAL_OPERATIONAL,
            "OperationalVesting: contract balance mismatch - tokens may have been drained"
@@ -300,7 +300,7 @@ contract OperationalVesting is AccessControl, Pausable, ReentrancyGuard {
        require(claimable > 0, "OperationalVesting: nothing to claim");
        
        communityVesting.claimed += claimable;
-       require(slvToken.transfer(msg.sender, claimable), "OperationalVesting: transfer failed");
+       require(svraToken.transfer(msg.sender, claimable), "OperationalVesting: transfer failed");
        
        emit TokensClaimed(msg.sender, "Community", claimable);
    }
@@ -314,7 +314,7 @@ contract OperationalVesting is AccessControl, Pausable, ReentrancyGuard {
        require(claimable > 0, "OperationalVesting: nothing to claim");
        
        marketingVesting.claimed += claimable;
-       require(slvToken.transfer(msg.sender, claimable), "OperationalVesting: transfer failed");
+       require(svraToken.transfer(msg.sender, claimable), "OperationalVesting: transfer failed");
        
        emit TokensClaimed(msg.sender, "Marketing", claimable);
    }
@@ -328,7 +328,7 @@ contract OperationalVesting is AccessControl, Pausable, ReentrancyGuard {
        require(claimable > 0, "OperationalVesting: nothing to claim");
        
        devVesting.claimed += claimable;
-       require(slvToken.transfer(msg.sender, claimable), "OperationalVesting: transfer failed");
+       require(svraToken.transfer(msg.sender, claimable), "OperationalVesting: transfer failed");
        
        emit TokensClaimed(msg.sender, "Dev", claimable);
    }
@@ -353,12 +353,12 @@ contract OperationalVesting is AccessControl, Pausable, ReentrancyGuard {
 
        uint256 totalReserved = communityReserved + marketingReserved + devReserved;
 
-       uint256 currentBalance = slvToken.balanceOf(address(this));
+       uint256 currentBalance = svraToken.balanceOf(address(this));
 
        // Critical Security Check: Ensure balance after withdrawal >= tokens reserved for future claims
        require(currentBalance >= totalReserved + amount, "Exceeds unassigned tokens");
 
-       require(slvToken.transfer(to, amount), "Transfer failed");
+       require(svraToken.transfer(to, amount), "Transfer failed");
        emit UnassignedWithdrawn(to, amount);
    }
 
